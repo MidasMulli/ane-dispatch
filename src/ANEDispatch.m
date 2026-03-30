@@ -121,6 +121,7 @@ static void ensureFrameworks(void) {
 
 - (void)dealloc {
     if (_surface) CFRelease(_surface);
+    [super dealloc];
 }
 
 @end

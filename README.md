@@ -117,14 +117,22 @@ ANE SharedEvents cause a background SIGSEGV in `aned`'s XPC completion handler a
 - **Cross-accelerator waits (GPU → ANE) are blocked** — Metal-bridged events with unmet thresholds cause the eval to block indefinitely. The kernel wait mechanism exists but GPU → ANE signal routing is unresolved.
 - **Standalone events with unmet thresholds are skipped** — ANE executes but skips all events (no signal-back either).
 
+### Chaining
+`ANEChainRequest` constructs successfully but `validate` crashes with `symbolIndex` — the chaining API requires IOSurfaces created through the model's internal mapper (`_ANEProgramIOSurfacesMapper`), not standalone buffers. Chaining with standalone `ANEBuffer` objects is not currently supported. Investigation needed into how `symbolIndex` maps to model I/O ports.
+
 ### MIL compilation
 The `_ANEInMemoryModelDescriptor` API exists but the MIL text format for direct compilation is undocumented. Currently, models must be pre-compiled via `coremltools` (Python). The library accepts compiled `.mlmodelc` directories.
+
+### One-shot SharedEvents
+After an evaluation with SharedEvents, the `aned` XPC connection is corrupted by the background crash. Subsequent evaluations with events on the same connection may hang. Create fresh `ANERequest` objects for each SharedEvents evaluation, or use one event-bearing eval per process.
 
 ## Requirements
 
 - macOS 26+ (Apple Silicon with ANE)
 - Xcode Command Line Tools
 - A compiled CoreML model (`.mlmodelc`)
+
+**Tested on:** MacBook Pro M5 Pro, 64 GB, macOS 26.0 (build 26A5840e).
 
 ## Architecture
 
