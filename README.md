@@ -156,7 +156,7 @@ The CoreML *runtime wrapper* is not in the path: the library communicates with `
 - **Orion** (arXiv 2603.06728): Direct `_ANEClient` dispatch for training. Did not use SharedEvents.
 - **ane-toolkit** ([github.com/MidasMulli/ane-toolkit](https://github.com/MidasMulli/ane-toolkit)): ANE binary format (H17), PWL activation deployment.
 
-As far as we are aware, `ane-dispatch` is the first open library to implement *functional* ANE SharedEvents and provide a reusable `_ANEClient`-direct dispatch API. maderix and Orion both used direct `_ANEClient` dispatch but neither implemented SharedEvents. This primacy claim is supported by an internal prior-art audit (status: verified) against maderix and Orion; it has **not** been re-audited against ANEMLL or other ecosystem projects that may have appeared since. Treat the "first" framing as best-effort, not an exhaustively verified primacy assertion.
+Per a prior-art audit on 2026-05-29 (against ANEMLL, maderix, and Orion), `ane-dispatch` is the first open library to implement *functional* ANE SharedEvents. maderix's writeup identified the `_ANESharedEvents` symbols but listed them as discovered-and-unexplored (not implemented); ANEMLL is public-CoreML only and does not use them; Orion does not implement them. `_ANEClient`-direct dispatch itself was demonstrated earlier by maderix (ANE training on M4) and by Orion (execution and training); our contribution is a reusable library that packages `_ANEClient`-direct dispatch together with a functional SharedEvents cross-substrate (ANE<->GPU) coordination primitive. We assert the functional-SharedEvents result against that audit; the `_ANEClient`-direct mechanism is shared prior art, credited above.
 
 ## Research findings
 
