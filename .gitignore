@@ -6,3 +6,18 @@ examples/shared_events_debug
 examples/shared_events_debug.m
 examples/chaining
 .DS_Store
+
+# graphify-out/ -- code-graph build cache (~94 MB). Also indexes sources, so it
+# can carry gated content past a source-level gate. Never commit.
+graphify-out/
+
+# compiled probe/test binaries (sources are the .m beside them)
+examples/probe1_native_wait
+examples/probe1_v2_wait_with_settle
+examples/probe2_introspect
+examples/probe3_cpu_wait
+examples/probe4_fresh_event
+examples/probe5_2_unload_reload
+examples/probe5_4_pool_drain
+examples/probe6_write_no_wait
+examples/probe7_async_check

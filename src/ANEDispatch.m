@@ -208,6 +208,33 @@ static void ensureFrameworks(void) {
     ANEModelState _state;
 }
 
+// On macOS 26 the system MLModel.compileModelAtURL: pipeline emits
+// MIL-format .mlmodelc bundles (model.mil + weights/) instead of the
+// older Espresso-format bundles (model.espresso.net + model.espresso.weights
+// + model.espresso.shape).  _ANEClient.compileModel:options:qos:error:
+// rejects MIL bundles with the misleading error
+//   _ANEEspressoIRTranslator: error Cannot load network 'model.espresso.net'
+// and _ANEModel.modelAtURL:key: itself silently accepts both formats,
+// so a non-loadable bundle round-trips as far as compileWithError: before
+// surfacing the format mismatch.  This static-archive patch detects the
+// mismatch up-front and returns a self-explanatory error so callers can
+// re-emit the bundle with the helper at
+//   ane-compiler/build_espresso_bundles.sh
+// (see vault/agent_reports/harness_fixup_espresso_mil.md for full context).
+static BOOL is_espresso_format_bundle(NSURL *url) {
+    if (!url) return NO;
+    NSString *espressoNet =
+        [url.path stringByAppendingPathComponent:@"model.espresso.net"];
+    return [[NSFileManager defaultManager] fileExistsAtPath:espressoNet];
+}
+
+static BOOL is_mil_format_bundle(NSURL *url) {
+    if (!url) return NO;
+    NSString *milNet =
+        [url.path stringByAppendingPathComponent:@"model.mil"];
+    return [[NSFileManager defaultManager] fileExistsAtPath:milNet];
+}
+
 + (nullable instancetype)modelWithCompiledURL:(NSURL *)url error:(NSError **)error {
     ensureFrameworks();
 
@@ -216,6 +243,31 @@ static void ensureFrameworks(void) {
     if (!cls) {
         if (error) *error = [NSError errorWithDomain:@"ANEDispatch" code:1
             userInfo:@{NSLocalizedDescriptionKey: @"_ANEModel class not found. AppleNeuralEngine framework may not be available."}];
+        return nil;
+    }
+
+    // Bundle-format detection: ane-dispatch direct loading via _ANEClient
+    // requires Espresso-format bundles (model.espresso.net).  MIL bundles
+    // (model.mil) round-trip past _ANEModel.modelAtURL: but fail at
+    // compileModel: with a misleading "Cannot load network" error.  Fail
+    // fast here with an actionable message.  (Set
+    // ANE_DISPATCH_ALLOW_MIL=1 in the environment to bypass the check
+    // for diagnostic purposes.)
+    BOOL allowMIL = (getenv("ANE_DISPATCH_ALLOW_MIL") != NULL);
+    if (!allowMIL && !is_espresso_format_bundle(url) && is_mil_format_bundle(url)) {
+        if (error) {
+            *error = [NSError errorWithDomain:@"ANEDispatch" code:42
+                userInfo:@{NSLocalizedDescriptionKey:
+                    [NSString stringWithFormat:
+                        @"Bundle at %@ is MIL-format (model.mil); ane-dispatch "
+                        @"direct loading on macOS 26 requires Espresso-format "
+                        @"(model.espresso.net).  Re-emit with "
+                        @"`ane-compiler/build_espresso_bundles.sh` (Path 1 of "
+                        @"vault/agent_reports/harness_fixup_espresso_mil.md), "
+                        @"or set ANE_DISPATCH_ALLOW_MIL=1 to bypass this guard.",
+                        url.path]
+                }];
+        }
         return nil;
     }
 

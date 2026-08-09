@@ -35,6 +35,37 @@ $(EXDIR)/shared_events: $(EXDIR)/shared_events.m $(LIBANE)
 $(EXDIR)/chaining: $(EXDIR)/chaining.m $(LIBANE)
 	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
 
+# Main 58 probes — GPU→ANE wait gate investigation
+$(EXDIR)/probe1_native_wait: $(EXDIR)/probe1_native_wait.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/probe2_introspect: $(EXDIR)/probe2_introspect.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/probe3_cpu_wait: $(EXDIR)/probe3_cpu_wait.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/probe4_fresh_event: $(EXDIR)/probe4_fresh_event.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/probe5_2_unload_reload: $(EXDIR)/probe5_2_unload_reload.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/probe5_4_pool_drain: $(EXDIR)/probe5_4_pool_drain.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/probe6_write_no_wait: $(EXDIR)/probe6_write_no_wait.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/probe7_async_check: $(EXDIR)/probe7_async_check.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/probe1_v2_wait_with_settle: $(EXDIR)/probe1_v2_wait_with_settle.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
+$(EXDIR)/gpu_ane_sync: $(EXDIR)/gpu_ane_sync.m $(LIBANE)
+	$(CC) $(CFLAGS) $(FRAMEWORKS) -L. -lANEDispatch $< -o $@
+
 # Tests
 tests: $(TESTDIR)/test_basic
 
