@@ -11,7 +11,7 @@ A reusable open library for ANE dispatch with cross-accelerator synchronization 
 `ane-dispatch` gives you direct access to the Apple Neural Engine via the private `_ANEClient` API, skipping the higher-level CoreML runtime wrapper:
 
 - **Lower-overhead dispatch** via the private `doEvaluateDirectWithModel:` entry point instead of the CoreML runtime's `evaluateWithModel:`. (A ~37% per-dispatch latency reduction was observed in informal testing; this figure is not yet in the measurement registry and should be treated as indicative, not a benchmarked guarantee.)
-- **SharedEvents signal-back**: ANE signals an IOSurfaceSharedEvent on completion. (We are not aware of another open implementation of functional ANE SharedEvents; see Prior art for the verification status of this claim.)
+- **SharedEvents signal-back**: ANE signals an IOSurfaceSharedEvent on completion. (See Prior art for what ANEMLL, maderix and Orion each document on this surface.)
 - **Metal bridge**: ANE completion events are bridgeable to MTLSharedEvent for GPU↔ANE synchronization
 - **Zero-copy IOSurface I/O**: direct buffer sharing between CPU, GPU, and ANE
 - **Chaining API** (experimental): pipelined multi-step execution with firmware-level enqueue delay
@@ -156,7 +156,7 @@ The CoreML *runtime wrapper* is not in the path: the library communicates with `
 - **Orion** (arXiv 2603.06728): Direct `_ANEClient` dispatch for training. Did not use SharedEvents.
 - **ane-toolkit** ([github.com/MidasMulli/ane-toolkit](https://github.com/MidasMulli/ane-toolkit)): ANE binary format (H17), PWL activation deployment.
 
-Per a prior-art audit on 2026-05-29 (against ANEMLL, maderix, and Orion), `ane-dispatch` is the first open library to implement *functional* ANE SharedEvents. maderix's writeup identified the `_ANESharedEvents` symbols but listed them as discovered-and-unexplored (not implemented); ANEMLL is public-CoreML only and does not use them; Orion does not implement them. `_ANEClient`-direct dispatch itself was demonstrated earlier by maderix (ANE training on M4) and by Orion (execution and training); our contribution is a reusable library that packages `_ANEClient`-direct dispatch together with a functional SharedEvents cross-substrate (ANE<->GPU) coordination primitive. We assert the functional-SharedEvents result against that audit; the `_ANEClient`-direct mechanism is shared prior art, credited above.
+A 2026-05-29 prior-art audit (against ANEMLL, maderix, and Orion) found no other open implementation of functional ANE SharedEvents in those three code bases; that audit, not a search of everything, is the claim's full scope. maderix's writeup identified the `_ANESharedEvents` symbols but listed them as discovered-and-unexplored (not implemented); ANEMLL is public-CoreML only and does not use them; Orion does not implement them. `_ANEClient`-direct dispatch itself was demonstrated earlier by maderix (ANE training on M4) and by Orion (execution and training); our contribution is a reusable library that packages `_ANEClient`-direct dispatch together with a functional SharedEvents cross-substrate (ANE<->GPU) coordination primitive. The `_ANEClient`-direct mechanism is shared prior art, credited above; what this library adds is the packaging of that mechanism with a working SharedEvents coordination primitive.
 
 ## Research findings
 
@@ -168,7 +168,7 @@ This library is built on reverse engineering work that discovered:
 
 3. **`doEvaluateDirectWithModel:` is lower-overhead than `evaluateWithModel:`**: it is a private `_ANEClient` entry point that skips the CoreML runtime wrapper's dispatch path while still going through `aned`. A ~37% per-dispatch latency reduction was observed in informal testing (not yet in the measurement registry; indicative, not a benchmarked guarantee).
 
-4. **`_ANEChainingRequest` supports firmware-level enqueue delay** (`fwEnqueueDelay`) and output-to-input loopback (`lbInputSymbolId`/`lbOutputSymbolId`). We are not aware of prior work exploring this, though it has not been exhaustively audited.
+4. **`_ANEChainingRequest` supports firmware-level enqueue delay** (`fwEnqueueDelay`) and output-to-input loopback (`lbInputSymbolId`/`lbOutputSymbolId`). The 2026-05-29 audit of ANEMLL, maderix and Orion found none of the three exploring this; beyond those three the question is open.
 
 ## License
 
